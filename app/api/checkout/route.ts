@@ -19,7 +19,7 @@ export async function POST(request: Request) {
               name: 'Tutoring Session (Video Class)',
             },
             // Note: 50 cents is the minimum allowed by Stripe
-            unit_amount: 50, // 50 cents
+            unit_amount: 3000, // 50 cents
           },
           quantity: 1,
         },
