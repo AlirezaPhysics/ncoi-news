@@ -49,20 +49,28 @@ export default function Dashboard() {
 
   // NEW: Handle Payment instead of instant booking
   const handleBook = async (slotId: number) => {
-    // 1. Call our API to get a payment link
-    const response = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slotId, tutorName: 'Expert Tutor' }),
-    })
-    
-    const data = await response.json()
+    // 1. Tell the user something is happening
+    const confirm = window.confirm("Proceed to payment ($0.50)?")
+    if (!confirm) return
 
-    if (data.url) {
-      // 2. Redirect the student to Stripe
-      window.location.href = data.url
-    } else {
-      alert("Payment Error")
+    // 2. Ask our backend for a checkout link
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slotId }),
+      })
+      
+      const data = await response.json()
+
+      // 3. Go to Stripe
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert("Payment Error")
+      }
+    } catch (err) {
+      alert("Payment failed to initialize")
     }
   }
 
