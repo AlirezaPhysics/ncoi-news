@@ -47,11 +47,22 @@ export default function Dashboard() {
     }
   }
 
+  // NEW: Handle Payment instead of instant booking
   const handleBook = async (slotId: number) => {
-    const { error } = await supabase.from('schedule').update({ is_booked: true }).eq('id', slotId)
-    if (!error) {
-      alert('Booked!')
-      fetchSchedule()
+    // 1. Call our API to get a payment link
+    const response = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slotId, tutorName: 'Expert Tutor' }),
+    })
+    
+    const data = await response.json()
+
+    if (data.url) {
+      // 2. Redirect the student to Stripe
+      window.location.href = data.url
+    } else {
+      alert("Payment Error")
     }
   }
 
