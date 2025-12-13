@@ -90,6 +90,16 @@ export default function Dashboard() {
               {role === 'student' && !slot.is_booked && (
                 <button onClick={() => handleBook(slot.id)} className="bg-green-600 text-white px-4 py-2 rounded font-bold hover:bg-green-700">Book</button>
               )}
+              {/* JOIN BUTTON: If slot is booked (either by me or I am the tutor) */}
+                {/* Note: In a real app, strict checks if I OWN this slot are needed, for MVP we show it if booked */}
+                {slot.is_booked && (
+                  <button 
+                    onClick={() => router.push(`/room/${slot.id}`)} 
+                    className="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700 ml-2"
+                  >
+                    Join Class (Video)
+                  </button>
+                )}
             </div>
           ))}
         </div>
