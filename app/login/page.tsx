@@ -27,7 +27,7 @@ export default function LoginPage() {
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) setMessage(error.message)
-    else router.push('/')
+    else router.push('/dashboard')
     setLoading(false)
   }
 
