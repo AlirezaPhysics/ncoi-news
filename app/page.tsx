@@ -50,7 +50,7 @@ export default function Dashboard() {
   // NEW: Handle Payment instead of instant booking
   const handleBook = async (slotId: number) => {
     // 1. Tell the user something is happening
-    const confirm = window.confirm("Proceed to payment ($0.50)?")
+    const confirm = window.confirm("Proceed to payment ($30.00)?")
     if (!confirm) return
 
     // 2. Ask our backend for a checkout link
