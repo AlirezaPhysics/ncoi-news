@@ -3,350 +3,242 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 
-const OTTAWA_LOCATIONS = ["Nepean Centrepointe Library (101 Centrepointe Dr)"]
-
 export default function Dashboard() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [role, setRole] = useState('student')
-  const [slots, setSlots] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   
-  // TUTOR STATE
+  // SCHEDULE STATE
+  const [slots, setSlots] = useState<any[]>([])
+  
+  // QUESTION STATE
+  const [questions, setQuestions] = useState<any[]>([]) // For Tutors (All) and Students (Own)
+  const [qDescription, setQDescription] = useState('')
+  const [qFile, setQFile] = useState<File | null>(null)
+  
+  // ANSWER UPLOAD STATE (For Tutors)
+  const [ansFile, setAnsFile] = useState<File | null>(null)
+  const [answeringId, setAnsweringId] = useState<number | null>(null)
+
+  // GENERIC LOADING
+  const [loading, setLoading] = useState(true)
+
+  // TUTOR SCHEDULE CREATION STATE
   const [newTime, setNewTime] = useState('')
-  const [recurrence, setRecurrence] = useState('one-time')
   const [allowInPerson, setAllowInPerson] = useState(false)
-  // Tutor detailed preferences
-  const [tutorGradePref, setTutorGradePref] = useState('All Grades')
-  const [tutorCourses, setTutorCourses] = useState('All Math Courses')
-  const [rememberTutor, setRememberTutor] = useState(false)
-
-  // STUDENT BOOKING STATE (The Modal)
-  const [selectedSlot, setSelectedSlot] = useState<any>(null) // If not null, modal is open
-  const [bookingType, setBookingType] = useState('online')
-  const [stuForm, setStuForm] = useState({ grade: '', course: '', needs: '', accommodations: '' })
-  const [stuFile, setStuFile] = useState<File | null>(null)
-  const [parentConsent, setParentConsent] = useState(false)
-  const [rememberStudent, setRememberStudent] = useState(false)
-
-  // REQUEST SESSION STATE
-  const [isRequesting, setIsRequesting] = useState(false)
-  const [requestText, setRequestText] = useState('')
 
   useEffect(() => {
-    const checkUser = async () => {
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      
       setUser(user)
+      
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      setRole(profile?.role || 'student')
-      fetchSchedule()
+      const userRole = profile?.role || 'student'
+      setRole(userRole)
+      
+      // Load Schedule
+      const now = new Date().toISOString()
+      const { data: schedData } = await supabase.from('schedule').select('*').gt('start_time', now).order('start_time')
+      if (schedData) setSlots(schedData)
 
-      // Load Remembered Settings
-      if (profile?.role === 'tutor') {
-          const saved = localStorage.getItem('tutor_pref')
-          if (saved) {
-              const p = JSON.parse(saved)
-              setTutorGradePref(p.grade)
-              setTutorCourses(p.courses)
-              setAllowInPerson(p.inPerson)
-              setRememberTutor(true)
-          }
-      } else {
-          const saved = localStorage.getItem('student_pref')
-          if (saved) {
-              const p = JSON.parse(saved)
-              setStuForm(prev => ({...prev, grade: p.grade, needs: p.needs}))
-              setRememberStudent(true)
-          }
-      }
+      // Load Questions
+      // RLS Policy handles who sees what (Tutor=All, Student=Own)
+      const { data: qData } = await supabase.from('questions').select('*').order('created_at', { ascending: false })
+      if (qData) setQuestions(qData)
+
+      setLoading(false)
     }
-    checkUser()
+    init()
   }, [])
 
-  const fetchSchedule = async () => {
-    const now = new Date().toISOString()
-    const { data } = await supabase
-        .from('schedule')
-        .select('*, profiles(full_name)') // Get tutor name
-        .gt('start_time', now)
-        .order('start_time', { ascending: true })
-    if (data) setSlots(data)
-    setLoading(false)
-  }
-
-  // --- TUTOR: CREATE SLOTS ---
-  const handleAddSlot = async () => {
-    if (!newTime) return
-    setLoading(true)
-
-    // Save preferences if 'Remember' checked
-    if (rememberTutor) {
-        localStorage.setItem('tutor_pref', JSON.stringify({ grade: tutorGradePref, courses: tutorCourses, inPerson: allowInPerson }))
-    }
-
-    const baseStart = new Date(newTime)
-    let slotsToCreate = []
-    
-    let loops = 1
-    let intervalDays = 0
-    if (recurrence === 'weekly') { loops = 12; intervalDays = 7 }
-    if (recurrence === 'biweekly') { loops = 6; intervalDays = 14 }
-    if (recurrence === 'monthly') { loops = 3; intervalDays = 30 }
-
-    for (let i = 0; i < loops; i++) {
-        const start = new Date(baseStart)
-        start.setDate(baseStart.getDate() + (i * intervalDays))
-        const end = new Date(start.getTime() + 60 * 60 * 1000)
-
-        slotsToCreate.push({
-            tutor_id: user.id,
-            start_time: start.toISOString(),
-            end_time: end.toISOString(),
-            is_booked: false,
-            allow_in_person: allowInPerson,
-            tutor_constraints: { grades: tutorGradePref, courses: tutorCourses } // SAVING META
-        })
-    }
-
-    const { error } = await supabase.from('schedule').insert(slotsToCreate)
-    if (error) alert('Error: ' + error.message)
-    else { alert('Availability Updated!'); fetchSchedule(); }
-    setLoading(false)
-  }
-
-  // --- STUDENT: SUBMIT BOOKING (Detailed) ---
-  const handleFinalPayment = async () => {
-      // 1. Validation
-      if (bookingType === 'in_person' && !parentConsent) return alert("Parental Consent is required for In-Person.")
-      if (!stuForm.grade || !stuForm.course) return alert("Please fill in Grade and Course.")
-
-      // 2. Save Preference
-      if (rememberStudent) {
-          localStorage.setItem('student_pref', JSON.stringify({ grade: stuForm.grade, needs: stuForm.needs }))
-      }
-
+  // --- 1. STUDENT: PAY & POST QUESTION ---
+  const handlePostQuestion = async () => {
+      if (!qFile) return alert("Please upload a picture/pdf of the problem.")
       setLoading(true)
 
-      // 3. Upload File if exists
-      let fileUrl = ''
-      if (stuFile) {
-          const filePath = `booking_${selectedSlot.id}/${Date.now()}_${stuFile.name}`
-          await supabase.storage.from('assignments').upload(filePath, stuFile)
-          const { data } = supabase.storage.from('assignments').getPublicUrl(filePath)
-          fileUrl = data.publicUrl
-      }
-
-      // 4. Construct Full Data Payload
-      const studentDetails = {
-          grade: stuForm.grade,
-          course: stuForm.course,
-          needs: stuForm.needs,
-          accommodations: stuForm.accommodations,
-          file_url: fileUrl
-      }
-
-      // 5. Checkout
-      try {
-        const response = await fetch('/api/checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                slotId: selectedSlot.id, 
-                bookingType: bookingType,
-                studentDetails: studentDetails 
-            }),
-        })
-        const data = await response.json()
-        if (data.url) window.location.href = data.url
-        else alert("Payment Init Failed")
-      } catch(e) { alert("System Error") }
+      // Upload Question File
+      const filePath = `q_${user.id}/${Date.now()}_${qFile.name}`
+      await supabase.storage.from('assignments').upload(filePath, qFile)
+      const { data } = supabase.storage.from('assignments').getPublicUrl(filePath)
       
+      // Go To Checkout ($20) - Pass file url via backend
+      try {
+        const res = await fetch('/api/checkout', {
+            method: 'POST',
+            body: JSON.stringify({ 
+                bookingType: 'quick', 
+                fileUrl: data.publicUrl,
+                description: qDescription
+            })
+        })
+        const checkout = await res.json()
+        if (checkout.url) window.location.href = checkout.url
+      } catch(e) { alert('Error starting payment') }
+  }
+
+  // --- 2. TUTOR: UPLOAD ANSWER ---
+  const handleUploadAnswer = async (questionId: number) => {
+      if (!ansFile) return alert("Select solution file.")
+      setLoading(true)
+
+      const filePath = `ans_${user.id}/${Date.now()}_${ansFile.name}`
+      await supabase.storage.from('assignments').upload(filePath, ansFile)
+      const { data } = supabase.storage.from('assignments').getPublicUrl(filePath)
+
+      const { error } = await supabase
+        .from('questions')
+        .update({ 
+            status: 'answered', 
+            answer_file: data.publicUrl, 
+            tutor_id: user.id 
+        })
+        .eq('id', questionId)
+
+      if (!error) {
+          alert("Answer sent!")
+          window.location.reload()
+      }
       setLoading(false)
   }
 
-  // --- STUDENT: REQUEST A SESSION ---
-  const handleRequestSession = async () => {
-      // For MVP, this creates a `mailto` link. 
-      // This is the fastest, free-est way to "Notify the company" who then forwards it.
-      const subject = `New Tutoring Request: ${stuForm.course || 'Math Help'}`
-      const body = `I am requesting a session.\n\nDetails: ${requestText}\nMy Course: ${stuForm.course}\n\nPlease check with all tutors.`
-      window.location.href = `mailto:admin@tutorcodeai.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-      setIsRequesting(false)
+  // --- TUTOR: CREATE SLOTS (Simplified for brevity) ---
+  const handleAddSlot = async () => {
+      if (!newTime) return
+      // Create just one for this test
+      const start = new Date(newTime)
+      const end = new Date(start.getTime() + 60*60*1000)
+      await supabase.from('schedule').insert({
+          tutor_id: user.id, start_time: start, end_time: end, is_booked: false, allow_in_person: allowInPerson
+      })
+      alert("Slot Added")
+      window.location.reload()
   }
 
-  if (loading) return <div className="p-20 text-center text-white bg-[#05051e] min-h-screen">Loading Marketplace...</div>
+  const handleBookSession = async (slotId: number, type: string) => {
+      if(!confirm(`Confirm ${type} booking?`)) return
+      const res = await fetch('/api/checkout', { method: 'POST', body: JSON.stringify({ slotId, bookingType: type }) })
+      const data = await res.json()
+      if(data.url) window.location.href = data.url
+  }
+
+  if (loading) return <div className="p-20 text-white text-center bg-[#05051e] h-screen">Loading Portal...</div>
 
   return (
-    <div className="min-h-screen bg-[#05051e] text-white p-8">
+    <div className="min-h-screen bg-[#05051e] text-white p-6">
       <div className="max-w-6xl mx-auto">
-        
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-10 pb-4 border-b border-white/10">
-          <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-            {role === 'tutor' ? 'Tutor Control Panel' : 'Student Marketplace'}
-          </h1>
-          <div className="flex gap-4">
-            {role === 'student' && (
-                <button onClick={() => setIsRequesting(true)} className="bg-green-600 text-white font-bold px-4 py-2 rounded hover:bg-green-500">
-                    Request Specific Time ✉️
-                </button>
-            )}
-            <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }} className="text-red-400 font-bold border border-red-900/50 px-4 py-2 rounded">
-                Sign Out
-            </button>
-          </div>
+        <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                {role === 'tutor' ? 'Tutor Command Center' : 'Student Learning Hub'}
+            </h1>
+            <button onClick={() => {supabase.auth.signOut(); router.push('/')}} className="text-red-400 border border-red-500/30 px-3 py-1 rounded">Sign Out</button>
         </div>
 
-        {/* --- TUTOR CREATE SECTION --- */}
-        {role === 'tutor' && (
-          <div className="bg-[#11113a] p-6 rounded-3xl mb-12 border border-blue-500/30">
-            <h2 className="text-xl font-bold mb-4">Set Availability & Rules</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 items-end mb-4">
-              <div>
-                <label className="text-slate-400 text-xs uppercase">Time</label>
-                <input type="datetime-local" onChange={(e) => setNewTime(e.target.value)} className="w-full bg-black/40 border border-slate-600 rounded p-2 text-white" />
-              </div>
-              <div>
-                <label className="text-slate-400 text-xs uppercase">Target Grade(s)</label>
-                <input type="text" value={tutorGradePref} onChange={e => setTutorGradePref(e.target.value)} className="w-full bg-black/40 border border-slate-600 rounded p-2 text-white" />
-              </div>
-              <div>
-                <label className="text-slate-400 text-xs uppercase">Courses</label>
-                <input type="text" value={tutorCourses} onChange={e => setTutorCourses(e.target.value)} className="w-full bg-black/40 border border-slate-600 rounded p-2 text-white" />
-              </div>
-              <div>
-                <label className="text-slate-400 text-xs uppercase">Recurrence</label>
-                <select onChange={(e) => setRecurrence(e.target.value)} className="w-full bg-black/40 border border-slate-600 rounded p-2 text-white">
-                    <option value="one-time">One Time</option>
-                    <option value="weekly">Weekly (3 Mo)</option>
-                    <option value="biweekly">Bi-Weekly</option>
-                    <option value="monthly">Monthly</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                    <input type="checkbox" id="ip" checked={allowInPerson} onChange={e => setAllowInPerson(e.target.checked)} className="w-4 h-4"/>
-                    <label htmlFor="ip" className="text-sm">Allow In-Person ($55)?</label>
+        {/* --- STUDENT SECTION: ASK A QUESTION --- */}
+        {role === 'student' && (
+            <div className="mb-12 bg-gradient-to-r from-[#11113a] to-[#1a1a45] p-8 rounded-3xl border border-blue-500/40">
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">⚡ Quick Question ($20)</h2>
+                <p className="text-slate-300 mb-6 text-sm">Upload a problem you are stuck on. An expert will solve it and upload the solution here within 24 hours.</p>
+                
+                <div className="flex flex-col md:flex-row gap-4">
+                    <input type="text" placeholder="Short description (e.g. Calculus Integral #4)" 
+                        className="flex-1 bg-black/30 border border-slate-600 rounded-lg p-3 text-white"
+                        onChange={e => setQDescription(e.target.value)}
+                    />
+                    <input type="file" onChange={e => setQFile(e.target.files?.[0] || null)} className="bg-black/30 text-slate-300 p-2 rounded-lg" />
+                    <button onClick={handlePostQuestion} className="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-lg font-bold">Pay & Submit</button>
                 </div>
-                <div className="flex items-center gap-2">
-                    <input type="checkbox" id="rem" checked={rememberTutor} onChange={e => setRememberTutor(e.target.checked)} className="w-4 h-4"/>
-                    <label htmlFor="rem" className="text-sm text-yellow-400">Remember these settings</label>
-                </div>
-                <button onClick={handleAddSlot} className="ml-auto bg-blue-600 px-6 py-2 rounded font-bold hover:bg-blue-500">Publish Slot(s)</button>
             </div>
-          </div>
         )}
 
-        {/* --- SLOT LIST --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {slots.map((slot) => {
-            const date = new Date(slot.start_time)
-            const meta = slot.tutor_constraints || { grades: 'All', courses: 'Math' } // Default Fallback
-
-            return (
-                <div key={slot.id} className={`p-6 rounded-2xl border flex flex-col gap-2 ${slot.is_booked ? 'bg-slate-900 border-slate-700 opacity-70' : 'bg-[#1a1a45] border-blue-500/30'}`}>
-                    <div className="flex justify-between items-start">
+        {/* --- Q&A BOARD (VISIBLE TO BOTH) --- */}
+        <div className="mb-12">
+            <h3 className="text-xl font-bold mb-4 text-purple-300">
+                {role === 'tutor' ? 'Incoming Question Pool' : 'My Questions History'}
+            </h3>
+            
+            <div className="grid gap-4">
+                {questions.length === 0 && <p className="text-slate-500 italic">No questions found.</p>}
+                
+                {questions.map(q => (
+                    <div key={q.id} className="bg-[#161640] p-6 rounded-2xl border border-white/5 flex flex-col md:flex-row justify-between items-start gap-4">
                         <div>
-                            <p className="text-blue-300 font-bold">{date.toLocaleDateString()}</p>
-                            <p className="text-2xl font-bold">{date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className={`text-xs px-2 py-1 rounded font-bold ${q.status === 'answered' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                    {q.status === 'answered' ? 'SOLVED' : 'PENDING'}
+                                </span>
+                                <span className="text-slate-400 text-sm">{new Date(q.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <p className="font-bold text-lg">{q.description || "Question details"}</p>
+                            <a href={q.question_file} target="_blank" className="text-blue-400 text-sm underline hover:text-blue-300 mt-1 block">
+                                View Problem File
+                            </a>
+                            
+                            {/* STUDENT VIEW SOLUTION */}
+                            {q.status === 'answered' && q.answer_file && (
+                                <div className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+                                    <p className="text-green-400 font-bold mb-1">Solution Ready:</p>
+                                    <a href={q.answer_file} target="_blank" className="text-white underline">Download Tutor's Answer</a>
+                                </div>
+                            )}
                         </div>
-                        <span className={`text-xs font-bold px-2 py-1 rounded ${slot.is_booked ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`}>{slot.is_booked ? 'BOOKED' : 'OPEN'}</span>
-                    </div>
-                    
-                    {/* SHOW TUTOR CONSTRAINTS */}
-                    <div className="mt-2 text-sm text-slate-400 bg-black/20 p-2 rounded">
-                        <p><strong>Focus:</strong> {meta.courses}</p>
-                        <p><strong>Grades:</strong> {meta.grades}</p>
-                        {slot.profiles && <p className="text-xs mt-1 text-blue-200">Tutor: {slot.profiles.full_name}</p>}
-                    </div>
 
-                    <div className="mt-auto pt-4">
+                        {/* TUTOR ACTION AREA */}
+                        {role === 'tutor' && q.status === 'pending' && (
+                            <div className="bg-black/30 p-4 rounded-xl border border-slate-700 min-w-[250px]">
+                                <p className="text-sm font-bold text-slate-300 mb-2">Upload Solution</p>
+                                {answeringId === q.id ? (
+                                    <div className="flex flex-col gap-2">
+                                        <input type="file" className="text-xs" onChange={e => setAnsFile(e.target.files?.[0] || null)}/>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleUploadAnswer(q.id)} className="bg-green-600 text-xs px-3 py-2 rounded">Send</button>
+                                            <button onClick={() => setAnsweringId(null)} className="bg-red-600 text-xs px-3 py-2 rounded">Cancel</button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setAnsweringId(q.id)} className="w-full bg-purple-600 text-white px-4 py-2 rounded font-bold text-sm">Solve This ($20)</button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+
+        {/* --- SCHEDULE SECTION (Bottom) --- */}
+        <div className="pt-8 border-t border-white/10">
+            <h2 className="text-3xl font-bold mb-6 text-white">Live Video Schedule</h2>
+            
+            {/* TUTOR CONTROLS */}
+            {role === 'tutor' && (
+                <div className="bg-[#11113a] p-4 rounded-xl mb-6 flex gap-4 items-center">
+                    <input type="datetime-local" onChange={e => setNewTime(e.target.value)} className="bg-black/50 text-white p-2 rounded" />
+                    <label className="flex items-center gap-2 text-sm text-slate-300"><input type="checkbox" checked={allowInPerson} onChange={e=>setAllowInPerson(e.target.checked)}/> In Person?</label>
+                    <button onClick={handleAddSlot} className="bg-blue-600 px-4 py-2 rounded font-bold">Add 1 Hour Slot</button>
+                </div>
+            )}
+
+            {/* SLOT GRID */}
+            <div className="grid md:grid-cols-3 gap-4">
+                {slots.map(slot => (
+                    <div key={slot.id} className="bg-[#1a1a45] p-4 rounded-xl border border-white/10">
+                        <div className="flex justify-between mb-2">
+                            <span className="font-bold text-blue-200">{new Date(slot.start_time).toLocaleString()}</span>
+                            {slot.is_booked && <span className="text-red-400 font-bold text-xs">BOOKED</span>}
+                        </div>
                         {role === 'student' && !slot.is_booked && (
-                            <button onClick={() => setSelectedSlot(slot)} className="w-full bg-[#fbbf24] text-black font-bold py-2 rounded hover:bg-[#f59e0b]">
-                                Book Now
-                            </button>
+                            <div className="flex gap-2 mt-2">
+                                <button onClick={() => handleBookSession(slot.id, 'online')} className="flex-1 bg-blue-600 py-1 rounded text-xs">Online ($35)</button>
+                                {slot.allow_in_person && <button onClick={() => handleBookSession(slot.id, 'in_person')} className="flex-1 bg-purple-600 py-1 rounded text-xs">Person ($55)</button>}
+                            </div>
                         )}
                         {slot.is_booked && (
-                            <button onClick={() => router.push(`/room/${slot.id}`)} className="w-full bg-blue-600 py-2 rounded font-bold">Join Video Room</button>
+                            <a href={`/room/${slot.id}`} className="block text-center bg-green-700 py-2 rounded mt-2 text-sm font-bold">Enter Class</a>
                         )}
                     </div>
-                </div>
-            )
-          })}
+                ))}
+            </div>
         </div>
-
-        {/* --- MODAL: STUDENT BOOKING DETAILS --- */}
-        {selectedSlot && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 overflow-y-auto">
-                <div className="bg-[#11113a] border border-blue-500/50 rounded-2xl p-8 max-w-lg w-full">
-                    <h2 className="text-2xl font-bold mb-4">Complete Your Booking</h2>
-                    
-                    {/* Booking Type */}
-                    <label className="text-sm font-bold text-slate-300">Session Mode</label>
-                    <div className="flex gap-2 mb-4">
-                        <button onClick={() => setBookingType('online')} className={`flex-1 py-2 rounded border ${bookingType === 'online' ? 'bg-blue-600 border-blue-600' : 'border-slate-600'}`}>Online ($35)</button>
-                        {selectedSlot.allow_in_person ? (
-                            <button onClick={() => setBookingType('in_person')} className={`flex-1 py-2 rounded border ${bookingType === 'in_person' ? 'bg-purple-600 border-purple-600' : 'border-slate-600'}`}>In-Person ($55)</button>
-                        ) : <button disabled className="flex-1 py-2 rounded border border-slate-700 text-slate-500 cursor-not-allowed">In-Person N/A</button>}
-                    </div>
-
-                    <label className="text-sm font-bold text-slate-300">Grade Level</label>
-                    <input className="w-full mb-3 bg-black/40 border border-slate-600 rounded p-2 text-white" value={stuForm.grade} onChange={e=>setStuForm({...stuForm, grade: e.target.value})} placeholder="e.g. Grade 11"/>
-
-                    <label className="text-sm font-bold text-slate-300">Course Code / Subject</label>
-                    <input className="w-full mb-3 bg-black/40 border border-slate-600 rounded p-2 text-white" value={stuForm.course} onChange={e=>setStuForm({...stuForm, course: e.target.value})} placeholder="e.g. MCR3U or Calculus I"/>
-
-                    <label className="text-sm font-bold text-slate-300">Issues / What to learn?</label>
-                    <textarea className="w-full mb-3 bg-black/40 border border-slate-600 rounded p-2 h-20 text-white" value={stuForm.needs} onChange={e=>setStuForm({...stuForm, needs: e.target.value})} placeholder="I am stuck on integration..."></textarea>
-
-                    <label className="text-sm font-bold text-slate-300">Accommodations / Needs?</label>
-                    <input className="w-full mb-3 bg-black/40 border border-slate-600 rounded p-2 text-white" value={stuForm.accommodations} onChange={e=>setStuForm({...stuForm, accommodations: e.target.value})} placeholder="Optional..."/>
-
-                    <label className="text-sm font-bold text-yellow-400">Upload Problem/Image (PDF/JPG)</label>
-                    <input type="file" className="w-full mb-4 text-sm" onChange={e => setStuFile(e.target.files ? e.target.files[0] : null)} />
-
-                    {/* Checkboxes */}
-                    {bookingType === 'in_person' && (
-                        <div className="flex items-start gap-2 mb-4 bg-red-900/20 p-2 rounded">
-                            <input type="checkbox" className="mt-1" checked={parentConsent} onChange={e => setParentConsent(e.target.checked)} />
-                            <p className="text-xs text-red-200">I verify I am 15+ OR have Parent Consent. Location: Nepean Library.</p>
-                        </div>
-                    )}
-                    
-                    <div className="flex items-center gap-2 mb-6">
-                        <input type="checkbox" checked={rememberStudent} onChange={e => setRememberStudent(e.target.checked)} />
-                        <span className="text-xs text-slate-400">Remember my details for next time</span>
-                    </div>
-
-                    <div className="flex gap-4">
-                        <button onClick={() => setSelectedSlot(null)} className="flex-1 bg-slate-700 py-3 rounded font-bold hover:bg-slate-600">Cancel</button>
-                        <button onClick={handleFinalPayment} className="flex-1 bg-green-600 py-3 rounded font-bold hover:bg-green-500">Pay Now</button>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* --- REQUEST MODAL --- */}
-        {isRequesting && (
-            <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
-                <div className="bg-[#1a1a45] p-8 rounded-2xl w-full max-w-md border border-white/20">
-                    <h2 className="text-xl font-bold mb-4">Request a Session</h2>
-                    <p className="text-slate-400 text-sm mb-4">Can't find a time? Tell us when you are free. This request will be emailed to our team.</p>
-                    <textarea 
-                        className="w-full h-32 bg-black/50 p-3 rounded text-white border border-slate-600" 
-                        placeholder="I need a tutor for Linear Algebra on Tuesday evenings or Sunday morning..."
-                        value={requestText} onChange={e => setRequestText(e.target.value)}
-                    ></textarea>
-                    <div className="flex gap-4 mt-4">
-                        <button onClick={() => setIsRequesting(false)} className="flex-1 bg-slate-600 py-2 rounded">Close</button>
-                        <button onClick={handleRequestSession} className="flex-1 bg-blue-600 py-2 rounded font-bold">Send Email</button>
-                    </div>
-                </div>
-            </div>
-        )}
 
       </div>
     </div>

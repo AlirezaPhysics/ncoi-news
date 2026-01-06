@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 
 export default function SuccessPage() {
   return (
-    <Suspense fallback={<div>Finalizing...</div>}>
+    <Suspense fallback={<div>Loading...</div>}>
       <BookingLogic />
     </Suspense>
   )
@@ -14,46 +14,48 @@ export default function SuccessPage() {
 function BookingLogic() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const [status, setStatus] = useState("Finalizing Booking...")
+  const [status, setStatus] = useState("Finalizing...")
   const [ran, setRan] = useState(false)
 
   useEffect(() => {
-    if (!ran && searchParams.get('slot_id')) {
+    if (ran) return
+    const type = searchParams.get('type')
+    
+    if (type) {
       setRan(true)
-      finishBooking()
+      if (type === 'quick') createQuestion(type)
+      else confirmSlot(type)
     }
   }, [searchParams])
 
-  const finishBooking = async () => {
+  // CASE 1: Updating a Slot (Session)
+  const confirmSlot = async (type: string) => {
     const slotId = searchParams.get('slot_id')
-    const bookingType = searchParams.get('type')
-    const rawData = searchParams.get('data') // The encoded JSON
+    const loc = type === 'in_person' ? 'Nepean Centrepointe Library' : `tutorcodeai.com/room/${slotId}`
     
-    let locationInfo = `tutorcodeai.com/room/${slotId}`
-    if (bookingType === 'in_person') locationInfo = 'Nepean Centrepointe Library (Baseline Station)'
-
-    // Parse the student details back into an object
-    let studentDetails = {}
-    try {
-        if (rawData) studentDetails = JSON.parse(decodeURIComponent(rawData))
-    } catch (e) { console.error("JSON Error", e) }
-
-    const { error } = await supabase
-      .from('schedule')
-      .update({ 
-          is_booked: true,
-          booking_type: bookingType,
-          location: locationInfo,
-          student_details: studentDetails // <--- Saving the questionnaire!
-      })
+    await supabase.from('schedule')
+      .update({ is_booked: true, booking_type: type, location: loc })
       .eq('id', slotId)
+    
+    setStatus("Session Confirmed!")
+    setTimeout(() => router.push('/dashboard'), 3000)
+  }
 
-    if (!error) {
-      setStatus("Booking Confirmed! Details saved.")
-      setTimeout(() => router.push('/dashboard'), 3000)
-    } else {
-      setStatus("Error saving booking details.")
-    }
+  // CASE 2: Creating a Question (Async)
+  const createQuestion = async (type: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    const fileUrl = decodeURIComponent(searchParams.get('file') || '')
+    const desc = decodeURIComponent(searchParams.get('desc') || '')
+
+    await supabase.from('questions').insert({
+        student_id: user?.id,
+        question_file: fileUrl,
+        description: desc,
+        status: 'pending'
+    })
+
+    setStatus("Question Received! Tutors have been notified.")
+    setTimeout(() => router.push('/dashboard'), 3000)
   }
 
   return (
