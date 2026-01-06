@@ -41,7 +41,7 @@ export default function LandingPage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Powered by AI Speed.</span>
             </h1>
             <p className="text-lg text-slate-300 leading-relaxed max-w-md">
-              Don't struggle with robot chatbots. Learn <strong>University Calculus & Physics</strong> from a Master's Engineer who knows exactly how to help you ace your exam.
+              Don't struggle with robot chatbots. Learn <strong>Any Level of Math, University Calculus & Physics</strong> from a Master's Engineer who knows exactly how to help you ace your exam.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
