@@ -17,8 +17,10 @@ export default function LandingPage() {
         
         <div className="hidden md:flex gap-8 text-sm font-medium text-slate-300">
           <Link href="/curriculum" className="hover:text-white transition">Curriculum</Link>
-          <Link href="/credentials" className="hover:text-white transition">Instructor Credentials</Link>
-          <Link href="/login" className="hover:text-white transition">Student Portal</Link>
+          <Link href="/credentials" className="hover:text-white transition">Credentials</Link>
+          <Link href="/pricing" className="hover:text-white transition">Pricing</Link>
+          <Link href="/contact" className="hover:text-white transition">Contact</Link>
+          <Link href="/login" className="hover:text-white transition">Login</Link>
         </div>
 
         <Link href="/login" className="px-6 py-2.5 text-sm font-bold bg-[#fbbf24] text-black rounded-full hover:bg-[#f59e0b] transition transform hover:scale-105 shadow-[0_0_20px_rgba(251,191,36,0.4)]">
