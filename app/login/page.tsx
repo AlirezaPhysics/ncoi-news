@@ -46,29 +46,34 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  const handleLogin = async () => {
-    setLoading(true)
-    const { error, data } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setMessage(error.message)
-    } else {
-      // 4. Check Roles/Status on Login
-      const { data: profile } = await supabase.from('profiles').select('role, status').eq('id', data.user.id).single()
-      
-      if (profile?.role === 'tutor') {
-          if (profile.status === 'pending') {
-              // Tutor is waiting for approval -> Send to Application Wait screen or Re-Apply
-              router.push('/apply-tutor') 
-          } else if (profile.status === 'approved') {
-              router.push('/dashboard')
-          } else {
-              alert("Your application was not approved.")
-          }
-      } else {
-          // Student -> Go to dashboard
-          router.push('/dashboard')
-      }
-    }
+ const handleLogin = async () => {
+     setLoading(true)
+     // 1. Authenticate with Supabase
+     const { error, data } = await supabase.auth.signInWithPassword({ email, password })
+     
+     if (error) {
+       setMessage(error.message) // This handles "Email not confirmed" errors
+     } else {
+       // 2. Check their Profile Role & Status
+       const { data: profile } = await supabase
+         .from('profiles')
+         .select('role, status')
+         .eq('id', data.user.id)
+         .single()
+       
+       if (profile?.role === 'tutor') {
+           // KEY STEP: The redirection logic
+           if (profile.status === 'pending') {
+               router.push('/apply-tutor')  // <--- Forces them to Questionnaire
+           } else if (profile.status === 'approved') {
+               router.push('/dashboard')    // <--- Let them in
+           } else {
+               alert("Your application is under review or rejected.")
+           }
+       } else {
+           router.push('/dashboard') // Students go straight in
+       }
+     }
     setLoading(false)
   }
 
