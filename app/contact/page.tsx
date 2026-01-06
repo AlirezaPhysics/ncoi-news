@@ -33,6 +33,7 @@ export default function ContactPage() {
           <Link href="/credentials" className="hover:text-white transition">Credentials</Link>
           <Link href="/pricing" className="hover:text-white transition">Pricing</Link>
           <Link href="/contact" className="text-white font-bold transition">Contact</Link>
+          <Link href="/login" className="hover:text-white transition">Login</Link>
         </div>
 
         {/* Right: Button */}
