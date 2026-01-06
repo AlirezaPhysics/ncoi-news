@@ -36,8 +36,8 @@ export default function LandingPage() {
             </div>
             <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
               Master Physics & <br />
-              <span className="bg-[#3b82f6] text-white px-2 decoration-clone">University Math</span> <br />
-              with an Expert.
+              <span className="bg-[#3b82f6] text-white px-2 decoration-clone">All Level Math</span> <br />
+              with Experts.
             </h1>
             <p className="text-lg text-slate-300 leading-relaxed max-w-md">
               From 4th Grade foundations to 3rd Year University Mathematics/Physics. Learn from a former <strong>Mathnasium Instructor</strong> and <strong>Carleton University Teaching Assistant</strong>.
