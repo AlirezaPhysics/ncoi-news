@@ -11,8 +11,17 @@ export default function LoginPage() {
   const [role, setRole] = useState('student')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  
+  // New Legal Checkbox
+  const [agreed, setAgreed] = useState(false)
 
   const handleSignUp = async () => {
+    // 1. Enforce Legal Agreement for Tutors
+    if (role === 'tutor' && !agreed) {
+        alert("You must agree to the Independent Contractor Terms and Canadian Laws before signing up.")
+        return
+    }
+
     setLoading(true)
     let referrerId = null
     if (referralCode && role === 'student') {
@@ -21,11 +30,14 @@ export default function LoginPage() {
     }
 
     const { data: authData, error } = await supabase.auth.signUp({
-      email, password, options: { data: { role: role } }
+      email,
+      password,
+      options: { data: { role: role } }
     })
 
-    if (error) setMessage(error.message)
-    else {
+    if (error) {
+      setMessage(error.message)
+    } else {
         if (referrerId && authData.user) {
             await supabase.from('profiles').update({ referred_by: referrerId }).eq('id', authData.user.id)
         }
@@ -40,13 +52,12 @@ export default function LoginPage() {
      
      if (error) setMessage(error.message) 
      else {
-       const { data: profile } = await supabase
-         .from('profiles').select('role, status, onboarding_complete').eq('id', data.user.id).single()
+       const { data: profile } = await supabase.from('profiles').select('role, status, onboarding_complete').eq('id', data.user.id).single()
        
        if (profile?.role === 'tutor') {
            if (profile.status === 'pending') router.push('/apply-tutor')
            else if (profile.status === 'approved') router.push('/dashboard')
-           else alert("Application under review.")
+           else alert("Application rejected.")
        } else {
            if (profile?.onboarding_complete) router.push('/dashboard')
            else router.push('/student-onboarding')
@@ -56,15 +67,9 @@ export default function LoginPage() {
   }
 
   return (
-    // UPDATED: Added Background Image
     <div className="flex flex-col items-center justify-center min-h-screen relative text-white">
-      
       {/* Background Image Layer */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/login-bg.jpg')" }} 
-      >
-        {/* Dark Overlay so text is readable */}
+      <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: "url('/login-bg.jpg')" }}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
       </div>
 
@@ -73,37 +78,38 @@ export default function LoginPage() {
             {role === 'tutor' ? 'Tutor Partner' : 'Student Access'}
         </h1>
         
-        <label className="text-sm font-bold text-slate-300">Email</label>
-        <input 
-          type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 mb-3 bg-black/50 border border-slate-600 rounded text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition"
-        />
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email"
+          className="w-full p-3 mb-3 bg-black/50 border border-slate-600 rounded text-white" />
 
-        <label className="text-sm font-bold text-slate-300">Password</label>
-        <input 
-          type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 mb-4 bg-black/50 border border-slate-600 rounded text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none transition"
-        />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password"
+          className="w-full p-3 mb-4 bg-black/50 border border-slate-600 rounded text-white" />
 
         {role === 'student' && (
-            <div className="mb-4">
-                <label className="text-sm font-bold text-green-400">Referral Email (Optional)</label>
-                <input 
-                  type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value)}
-                  placeholder="tutor@example.com"
-                  className="w-full p-2 mt-1 bg-green-900/20 border border-green-500/50 rounded text-white text-sm"
-                />
-            </div>
+            <input type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value)}
+              placeholder="Referral Email (Optional)"
+              className="w-full p-2 mb-4 mt-1 bg-green-900/20 border border-green-500/50 rounded text-white text-sm" />
         )}
 
         <div className="mb-6 bg-black/40 p-1.5 rounded flex justify-center gap-2">
-            <button onClick={() => setRole('student')} className={`flex-1 text-sm px-3 py-1.5 rounded transition ${role==='student' ? 'bg-blue-600 text-white shadow-lg' : 'hover:text-gray-300 text-gray-500'}`}>Student</button>
-            <button onClick={() => setRole('tutor')} className={`flex-1 text-sm px-3 py-1.5 rounded transition ${role==='tutor' ? 'bg-purple-600 text-white shadow-lg' : 'hover:text-gray-300 text-gray-500'}`}>Tutor</button>
+            <button onClick={() => setRole('student')} className={`flex-1 text-sm px-3 py-1.5 rounded ${role==='student' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>Student</button>
+            <button onClick={() => setRole('tutor')} className={`flex-1 text-sm px-3 py-1.5 rounded ${role==='tutor' ? 'bg-purple-600 text-white' : 'text-gray-500'}`}>Tutor</button>
         </div>
 
+        {/* LEGAL DISCLAIMER FOR TUTORS */}
+        {role === 'tutor' && (
+            <div className="mb-6 p-3 bg-red-900/20 border border-red-500/30 rounded text-xs text-slate-300">
+                <div className="flex items-start gap-2">
+                    <input type="checkbox" className="mt-1" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
+                    <p>
+                        I certify I will operate within the laws of Canada. I understand I am an Independent Contractor, responsible for my own tax/legal compliance, and not an employee of TutorMathPhys.AI.
+                    </p>
+                </div>
+            </div>
+        )}
+
         <div className="flex gap-2">
-          <button onClick={handleLogin} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold transition">Log In</button>
-          <button onClick={handleSignUp} className="flex-1 bg-[#fbbf24] text-black py-3 rounded-xl font-bold hover:bg-[#f59e0b] transition shadow-[0_0_15px_rgba(251,191,36,0.3)]">Sign Up</button>
+          <button onClick={handleLogin} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold">Log In</button>
+          <button onClick={handleSignUp} className="flex-1 bg-[#fbbf24] text-black py-3 rounded-xl font-bold hover:bg-[#f59e0b]">Sign Up</button>
         </div>
         {message && <p className="mt-4 text-center text-yellow-400 text-sm font-bold">{message}</p>}
       </div>
