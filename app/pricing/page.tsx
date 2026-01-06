@@ -104,6 +104,28 @@ export default function PricingPage() {
                 Contact Sales
             </Link>
           </div>
+          
+          {/* OPTION: $20 QUICK FIX */}
+          <div className="bg-[#1a1a45] border border-pink-500/50 rounded-3xl p-8 relative flex flex-col hover:-translate-y-2 transition duration-300">
+            <div className="mb-4">
+                <span className="bg-pink-900/30 text-pink-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ 24hr Turnaround</span>
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2">Quick Question</h3>
+            <p className="text-slate-400 text-sm mb-6">Stuck on one problem? Upload it.</p>
+            <div className="mb-6 flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold text-pink-400">$20</span>
+                <span className="text-slate-500">/ solution</span>
+            </div>
+            <ul className="space-y-4 mb-8 flex-1 text-slate-300 text-sm">
+                <li className="flex gap-3"><span className="text-pink-400">✓</span> Upload Photo/PDF</li>
+                <li className="flex gap-3"><span className="text-pink-400">✓</span> Expert Step-by-Step</li>
+                <li className="flex gap-3"><span className="text-pink-400">✓</span> Delivered within 24h</li>
+                <li className="flex gap-3"><span className="text-pink-400">✓</span> No scheduling needed</li>
+            </ul>
+            <Link href="/login" className="w-full block text-center py-3 bg-pink-600 hover:bg-pink-500 rounded-xl font-bold transition shadow-lg shadow-pink-500/25">
+                Upload Question
+            </Link>
+          </div>
 
         </div>
       </section>
