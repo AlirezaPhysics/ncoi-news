@@ -7,7 +7,6 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  // Add Referral State
   const [referralCode, setReferralCode] = useState('')
   const [role, setRole] = useState('student')
   const [loading, setLoading] = useState(false)
@@ -16,62 +15,66 @@ export default function LoginPage() {
   const handleSignUp = async () => {
     setLoading(true)
     
-    // 1. Try to find the referrer's ID (if code provided)
+    // 1. Check referral
     let referrerId = null
     if (referralCode && role === 'student') {
         const { data } = await supabase.from('profiles').select('id').eq('email', referralCode).single()
         if (data) referrerId = data.id
     }
 
-    // 2. Sign Up
+    // 2. Create Auth User
     const { data: authData, error } = await supabase.auth.signUp({
       email,
       password,
       options: { 
-        data: { role: role } // Metadata
+        data: { role: role }
       }
     })
 
     if (error) {
       setMessage(error.message)
     } else {
-        // 3. If user created successfully, link the referral in profiles
-        // (Note: The Trigger creates the profile row, so we just update it)
+        // 3. Link Referral if exists
         if (referrerId && authData.user) {
             await supabase.from('profiles').update({ referred_by: referrerId }).eq('id', authData.user.id)
         }
-        
         setMessage('Account created! Please check your email to confirm.')
     }
     setLoading(false)
   }
 
- const handleLogin = async () => {
+  const handleLogin = async () => {
      setLoading(true)
-     // 1. Authenticate with Supabase
      const { error, data } = await supabase.auth.signInWithPassword({ email, password })
      
      if (error) {
-       setMessage(error.message) // This handles "Email not confirmed" errors
+       setMessage(error.message) 
      } else {
-       // 2. Check their Profile Role & Status
+       // 4. FETCH PROFILE + ONBOARDING STATUS
        const { data: profile } = await supabase
          .from('profiles')
-         .select('role, status')
+         .select('role, status, onboarding_complete') // <--- Requesting new column
          .eq('id', data.user.id)
          .single()
        
        if (profile?.role === 'tutor') {
-           // KEY STEP: The redirection logic
+           // TUTOR LOGIC
            if (profile.status === 'pending') {
-               router.push('/apply-tutor')  // <--- Forces them to Questionnaire
+               router.push('/apply-tutor')
            } else if (profile.status === 'approved') {
-               router.push('/dashboard')    // <--- Let them in
+               router.push('/dashboard')
            } else {
                alert("Your application is under review or rejected.")
            }
        } else {
-           router.push('/dashboard') // Students go straight in
+           // STUDENT LOGIC (UPDATED)
+           // If they finished the questionnaire, go to dashboard.
+           // If not, send them to onboarding.
+           if (profile?.onboarding_complete) {
+               router.push('/dashboard')
+           } else {
+               router.push('/student-onboarding')
+           }
        }
      }
     setLoading(false)
