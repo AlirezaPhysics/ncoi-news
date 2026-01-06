@@ -180,7 +180,34 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      {/* SAMPLE TEACHING SESSIONS */}
+      <section className="bg-[#05051e] py-32 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">See how we <span className="text-purple-400">Teach.</span></h2>
+          <p className="text-slate-400 mb-16 max-w-xl mx-auto">Watch real examples of how we break down complex problems in University Physics and Elementary Math.</p>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Video 1 */}
+            <div className="bg-[#1a1a40] p-4 rounded-3xl border border-white/10 hover:border-purple-500/50 transition">
+                <div className="aspect-video bg-black rounded-xl flex items-center justify-center relative overflow-hidden group">
+                    {/* Replace 'YOUR_VIDEO_ID' below with a real YouTube ID when you have it */}
+                    <iframe className="w-full h-full" src="https://www.youtube.com/embed/YOUR_VIDEO_ID_HERE" title="Calculus Sample" allowFullScreen></iframe>
+                </div>
+                <h3 className="text-left text-xl font-bold mt-4 text-white">Calculus II: Multivariable Integrals</h3>
+                <p className="text-left text-sm text-slate-400">University Level Walkthrough</p>
+            </div>
 
+            {/* Video 2 */}
+            <div className="bg-[#1a1a40] p-4 rounded-3xl border border-white/10 hover:border-green-500/50 transition">
+                <div className="aspect-video bg-black rounded-xl flex items-center justify-center relative overflow-hidden">
+                    <iframe className="w-full h-full" src="https://www.youtube.com/embed/YOUR_VIDEO_ID_HERE" title="Grade 6 Math Sample" allowFullScreen></iframe>
+                </div>
+                <h3 className="text-left text-xl font-bold mt-4 text-white">Grade 6: Solving Word Problems</h3>
+                <p className="text-left text-sm text-slate-400">Elementary Foundation Strategy</p>
+            </div>
+          </div>
+        </div>
+      </section>
       <footer className="py-20 bg-[#050510] text-center border-t border-slate-900">
         <h2 className="text-4xl font-bold mb-8 text-white">Your personalized <br/>Physics & Math Tutor.</h2>
         <div className="text-slate-600 text-sm">
