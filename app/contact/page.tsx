@@ -19,22 +19,28 @@ export default function ContactPage() {
     <div className="min-h-screen bg-[#05051e] text-white font-sans selection:bg-purple-500 selection:text-white">
       
       {/* NAVBAR */}
-      <nav className="flex justify-between items-center px-6 py-6 max-w-7xl mx-auto w-full">
+      <nav className="flex justify-between items-center px-6 py-6 max-w-7xl mx-auto w-full relative z-10">
+        
+        {/* Left: Logo */}
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 bg-gradient-to-tr from-blue-500 to-indigo-500 rounded-lg group-hover:scale-110 transition"></div>
           <span className="text-xl font-bold tracking-widest text-white uppercase">TutorMathPhys.AI</span>
         </Link>
-        <Link href="/login" className="px-6 py-2.5 text-sm font-bold bg-[#fbbf24] text-black rounded-full hover:bg-[#f59e0b] transition">
-          Book Session
-        </Link>
-      </nav>
+        
+        {/* Middle: Links (Corrected Location) */}
         <div className="hidden md:flex gap-8 text-sm font-medium text-slate-300">
           <Link href="/curriculum" className="hover:text-white transition">Curriculum</Link>
           <Link href="/credentials" className="hover:text-white transition">Credentials</Link>
           <Link href="/pricing" className="hover:text-white transition">Pricing</Link>
-          <Link href="/contact" className="hover:text-white transition">Contact</Link>
-          <Link href="/contact" className="hover:text-white transition">Contact</Link>
+          <Link href="/contact" className="text-white font-bold transition">Contact</Link>
         </div>
+
+        {/* Right: Button */}
+        <Link href="/login" className="px-6 py-2.5 text-sm font-bold bg-[#fbbf24] text-black rounded-full hover:bg-[#f59e0b] transition">
+          Book Session
+        </Link>
+      </nav>
+
       {/* HEADER */}
       <div className="pt-20 pb-10 text-center">
         <h1 className="text-5xl font-extrabold mb-4">Contact <span className="text-blue-400">Support</span></h1>
