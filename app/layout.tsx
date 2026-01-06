@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: 'TutorMathPhys - Learn, enjoy and improve',
-  description: 'The world’s first superhuman Physics and Math tutor.',
-};
+  title: 'TutorCode AI | Expert Human Math & Physics Tutoring',
+  description: 'Book a 1-on-1 session with a Master\'s Level Engineer and Physicist.',
+}
 
 export default function RootLayout({
   children,
