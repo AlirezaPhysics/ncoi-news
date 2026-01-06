@@ -40,7 +40,7 @@ export default function LandingPage() {
               with an Expert.
             </h1>
             <p className="text-lg text-slate-300 leading-relaxed max-w-md">
-              From 4th Grade foundations to 3rd Year University Applied Physics. Learn from a former <strong>Mathnasium Instructor</strong> and <strong>Carleton University TA</strong>.
+              From 4th Grade foundations to 3rd Year University Mathematics/Physics. Learn from a former <strong>Mathnasium Instructor</strong> and <strong>Carleton University Teaching Assistant</strong>.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -131,7 +131,7 @@ export default function LandingPage() {
             {/* Experience Card 3 */}
             <div className="bg-[#1e1e48] p-8 rounded-3xl border border-blue-500/30 hover:border-blue-400 transition shadow-lg shadow-blue-900/20">
               <div className="text-4xl mb-4">🚀</div>
-              <h3 className="text-xl font-bold text-white mb-2">Applied Physics Major</h3>
+              <h3 className="text-xl font-bold text-white mb-2">Physics, Math & Engineering</h3>
               <p className="text-slate-300 text-sm">
                 4th Year Honours Standing. Mastering Complex Calculus, Linear Algebra, and Quantum Mechanics.
               </p>
