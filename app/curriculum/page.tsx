@@ -3,15 +3,23 @@ import Link from 'next/link'
 
 export default function CurriculumPage() {
   return (
-    <div className="min-h-screen bg-[#05051e] text-white font-sans">
+    <div className="min-h-screen bg-[#05051e] text-white font-sans selection:bg-purple-500 selection:text-white">
       
-      {/* NAVBAR (Consistent with Home) */}
-      <nav className="flex justify-between items-center px-6 py-6 max-w-7xl mx-auto">
+      {/* 1. NAVBAR - FIXED */}
+      <nav className="flex justify-between items-center px-6 py-6 max-w-7xl mx-auto w-full relative z-10">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 bg-gradient-to-tr from-blue-500 to-indigo-500 rounded-lg group-hover:scale-110 transition"></div>
           <span className="text-xl font-bold tracking-widest text-white uppercase">TutorMathPhys.AI</span>
         </Link>
-        <Link href="/login" className="px-6 py-2.5 text-sm font-bold bg-[#fbbf24] text-black rounded-full hover:bg-[#f59e0b] transition">
+        
+        {/* The Missing Middle Section */}
+        <div className="hidden md:flex gap-8 text-sm font-medium text-slate-300">
+          <Link href="/curriculum" className="text-white font-bold transition">Curriculum</Link>
+          <Link href="/credentials" className="hover:text-white transition">Credentials</Link>
+          <Link href="/login" className="hover:text-white transition">Login</Link>
+        </div>
+
+        <Link href="/login" className="px-6 py-2.5 text-sm font-bold bg-[#fbbf24] text-black rounded-full hover:bg-[#f59e0b] transition shadow-[0_0_20px_rgba(251,191,36,0.4)]">
           Book Session
         </Link>
       </nav>
@@ -91,7 +99,6 @@ export default function CurriculumPage() {
 
         <div className="bg-[#161648] rounded-3xl p-1 overflow-hidden">
           <div className="grid md:grid-cols-3 gap-1 bg-[#05051e]">
-            {/* Elementary */}
             <div className="bg-[#1a1a45] p-8 hover:bg-[#1f1f50] transition">
               <h3 className="text-xl font-bold text-green-400 mb-4">Grades 4-8</h3>
               <p className="text-slate-400 text-sm mb-4">Building unshakeable foundations.</p>
@@ -103,7 +110,6 @@ export default function CurriculumPage() {
               </ul>
             </div>
 
-            {/* High School Math */}
             <div className="bg-[#1a1a45] p-8 hover:bg-[#1f1f50] transition">
               <h3 className="text-xl font-bold text-green-400 mb-4">High School Math</h3>
               <p className="text-slate-400 text-sm mb-4">Preparation for University.</p>
@@ -115,7 +121,6 @@ export default function CurriculumPage() {
               </ul>
             </div>
 
-            {/* High School Physics */}
             <div className="bg-[#1a1a45] p-8 hover:bg-[#1f1f50] transition">
               <h3 className="text-xl font-bold text-green-400 mb-4">High School Physics</h3>
               <p className="text-slate-400 text-sm mb-4">Understanding the physical world.</p>
@@ -130,7 +135,6 @@ export default function CurriculumPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="py-20 bg-[#050510] text-center border-t border-slate-900">
         <h2 className="text-3xl font-bold mb-8 text-white">Ready to master the material?</h2>
         <Link href="/login" className="inline-block px-10 py-4 text-lg font-bold bg-[#fbbf24] text-black rounded-full hover:bg-[#f59e0b] transition">

@@ -15,7 +15,7 @@ export default function LandingPage() {
         
         <div className="hidden md:flex gap-8 text-sm font-medium text-slate-300">
           <Link href="/curriculum" className="hover:text-white transition">Curriculum</Link>
-          <Link href="#" className="hover:text-white transition">Credentials</Link>
+          <Link href="/credentials" className="hover:text-white transition">Credentials</Link>
           <Link href="/login" className="hover:text-white transition">Login</Link>
         </div>
 
