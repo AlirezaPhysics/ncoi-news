@@ -25,11 +25,18 @@ export default function PersianHome() {
   return (
     <div className="min-h-screen bg-gray-100 text-black font-sans flex flex-col" dir="rtl">
       <header className="bg-blue-900 text-white p-6 shadow-md flex justify-between items-center relative z-50">
-        <div>
-          <h1 className="text-4xl font-bold tracking-widest uppercase"><a href="/fa">اخبار NCOI</a></h1>
-          <p className="text-sm mt-1 text-blue-200">همیاری ملی ایرانیان اتاوا</p>
-        </div>
         
+        {/* NEW LOGO + TEXT COMBO (PERSIAN) */}
+        <div className="flex items-center gap-4">
+          <a href="/fa">
+            <img src="/logo.jpg" alt="NCOI Logo" className="h-16 w-16 object-cover rounded-full shadow-lg border-2 border-white hover:scale-105 transition" />
+          </a>
+          <div>
+            <h1 className="text-4xl font-bold tracking-widest uppercase"><a href="/fa">اخبار NCOI</a></h1>
+            <p className="text-sm mt-1 text-blue-200">همیاری ملی ایرانیان اتاوا</p>
+          </div>
+        </div>
+                
         <div className="flex items-center gap-4">
           {/* CLEAN LANGUAGE SWITCHER (No Flags) */}
           <a href="/en" className="text-sm font-bold bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded border border-blue-600 transition" dir="ltr">EN</a>
