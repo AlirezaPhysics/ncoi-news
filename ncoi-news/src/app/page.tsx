@@ -100,7 +100,7 @@ export default function Home() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4">Live Broadcast</h2>
           <div className="aspect-video w-full mb-6 rounded bg-black">
-            <iframe width="100%" height="100%" src="https://www.youtube.com/@NationalCooperationOttawa" title="Live" frameBorder="0" allowFullScreen></iframe>
+            <iframe width="100%" height="100%" src="https://iranopasmigirim.com/fa/iran-national-revolution-tv" title="Iran National TV" frameBorder="0" allowFullScreen></iframe>
           </div>
           
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4 mt-8">Latest Reports</h2>
@@ -133,10 +133,10 @@ export default function Home() {
           <h2 className="text-2xl font-bold tracking-widest uppercase mb-2">NCOI News</h2>
           <p className="text-sm text-gray-400 mb-6">Advocating for Democracy, Human Rights, and Regime Change.</p>
           <div className="flex justify-center gap-6 text-sm text-gray-300 font-bold mb-6">
-            <a href="#" className="hover:text-white transition">About Us</a>
-            <a href="#" className="hover:text-white transition">Contact</a>
-            <a href="#" className="hover:text-white transition">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition">Terms of Service</a>
+            <a href="/about" className="hover:text-white transition">About Us</a>
+            <a href="/contact" className="hover:text-white transition">Contact</a>
+            <a href="/privacy" className="hover:text-white transition">Privacy Policy</a>
+            <a href="/terms" className="hover:text-white transition">Terms of Service</a>
           </div>
           <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} National Cooperation Ottawa Iran. All rights reserved.</p>
         </div>
