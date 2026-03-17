@@ -108,7 +108,6 @@ export default function Home() {
                 muted={true}
                 width="100%"
                 height="100%"
-                config={{ file: { forceHLS: true } } as any}
               />
             )}
           </div>
