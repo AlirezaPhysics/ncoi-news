@@ -23,10 +23,7 @@ export default function PersianHome() {
   const fetchArticles = async () => { const { data } = await supabase.from('articles').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(5); if (data) setArticles(data); };
 
   return (
-    // dir="rtl" makes the entire website Right-to-Left!
-    <div className="min-h-screen bg-gray-100 text-black font-sans" dir="rtl">
-      
-      {/* HEADER */}
+    <div className="min-h-screen bg-gray-100 text-black font-sans flex flex-col" dir="rtl">
       <header className="bg-blue-900 text-white p-6 shadow-md flex justify-between items-center relative z-50">
         <div>
           <h1 className="text-4xl font-bold tracking-widest uppercase"><a href="/fa">اخبار NCOI</a></h1>
@@ -34,8 +31,8 @@ export default function PersianHome() {
         </div>
         
         <div className="flex items-center gap-4">
-          {/* LANGUAGE SWITCHER */}
-          <a href="/en" className="text-sm font-bold bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded border border-blue-600 transition" dir="ltr">🇬🇧 EN</a>
+          {/* CLEAN LANGUAGE SWITCHER (No Flags) */}
+          <a href="/en" className="text-sm font-bold bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded border border-blue-600 transition" dir="ltr">EN</a>
           
           {user && profile ? (
             <div className="relative group cursor-pointer pb-2 pt-2">
@@ -54,9 +51,7 @@ export default function PersianHome() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto mt-6 p-4 grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
-        
-        {/* RIGHT SIDEBAR (Now on the right due to RTL!): Live News */}
+      <main className="max-w-7xl mx-auto mt-6 p-4 grid grid-cols-1 md:grid-cols-4 gap-6 items-start flex-grow">
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-6 self-start">
           <h2 className="text-xl font-bold border-b-4 border-red-600 pb-2 mb-4 text-red-600 flex items-center gap-2"><span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> اخبار فوری</h2>
           <div className="space-y-6 max-h-[70vh] overflow-y-auto pl-2">
@@ -71,11 +66,10 @@ export default function PersianHome() {
           </div>
         </div>
 
-        {/* MIDDLE: Featured Articles & Live Video */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4">پخش زنده</h2>
           <div className="aspect-video w-full mb-6 rounded bg-black overflow-hidden shadow-xl border border-slate-300">
-            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/wk0uvX60fxg?autoplay=1&mute=1" frameBorder="0" allowFullScreen></iframe>
+            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1" frameBorder="0" allowFullScreen></iframe>
           </div>
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4 mt-8">آخرین گزارش‌ها</h2>
           <div className="space-y-6">
@@ -89,7 +83,6 @@ export default function PersianHome() {
           </div>
         </div>
 
-        {/* LEFT SIDEBAR (Now on the left!): Telegram Feed */}
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-6 self-start">
           <h2 className="text-xl font-bold border-b-4 border-blue-400 pb-2 mb-4 text-blue-600">جامعه تلگرامی</h2>
           <div className="bg-blue-50 border border-blue-200 p-6 rounded text-center">
@@ -99,6 +92,21 @@ export default function PersianHome() {
           </div>
         </div>
       </main>
+
+      {/* RESTORED PERSIAN FOOTER */}
+      <footer className="bg-slate-900 text-white mt-12 py-8 text-center border-t-4 border-blue-600">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-2xl font-bold tracking-widest mb-2">اخبار NCOI</h2>
+          <p className="text-sm text-gray-400 mb-6">حمایت از دموکراسی، حقوق بشر و تغییر رژیم.</p>
+          <div className="flex justify-center gap-6 text-sm text-gray-300 font-bold mb-6">
+            <a href="/about" className="hover:text-white transition">درباره ما</a>
+            <a href="/contact" className="hover:text-white transition">تماس با ما</a>
+            <a href="/privacy" className="hover:text-white transition">سیاست حریم خصوصی</a>
+            <a href="/terms" className="hover:text-white transition">شرایط استفاده</a>
+          </div>
+          <p className="text-xs text-gray-500" dir="ltr">&copy; {new Date().getFullYear()} National Cooperation Ottawa Iran. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }
