@@ -29,7 +29,7 @@ export default function PersianHome() {
         {/* NEW LOGO + TEXT COMBO (PERSIAN) */}
         <div className="flex items-center gap-4">
           <a href="/fa">
-            <img src="/logo.jpg" alt="NCOI Logo" className="h-16 w-16 object-cover rounded-full shadow-lg border-2 border-white hover:scale-105 transition" />
+            <img src="/logo.jpeg" alt="NCOI Logo" className="h-16 w-16 object-cover rounded-full shadow-lg border-2 border-white hover:scale-105 transition" />
           </a>
           <div>
             <h1 className="text-4xl font-bold tracking-widest uppercase"><a href="/fa">اخبار NCOI</a></h1>

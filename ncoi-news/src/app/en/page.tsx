@@ -29,7 +29,7 @@ export default function EnglishHome() {
         {/* NEW LOGO + TEXT COMBO */}
         <div className="flex items-center gap-4">
           <a href="/en">
-            <img src="/logo.jpg" alt="NCOI Logo" className="h-16 w-16 object-cover rounded-full shadow-lg border-2 border-white hover:scale-105 transition" />
+            <img src="/logo.jpeg" alt="NCOI Logo" className="h-16 w-16 object-cover rounded-full shadow-lg border-2 border-white hover:scale-105 transition" />
           </a>
           <div>
             <h1 className="text-4xl font-bold tracking-widest uppercase"><a href="/en">NCOI News</a></h1>
