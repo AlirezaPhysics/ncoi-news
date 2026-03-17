@@ -75,7 +75,7 @@ export default function PersianHome() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4">پخش زنده</h2>
           <div className="aspect-video w-full mb-6 rounded bg-black overflow-hidden shadow-xl border border-slate-300">
-            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1" frameBorder="0" allowFullScreen></iframe>
+            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/wk0uvX60fxg?autoplay=1&mute=1" frameBorder="0" allowFullScreen></iframe>
           </div>
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4 mt-8">آخرین گزارش‌ها</h2>
           <div className="space-y-6">
