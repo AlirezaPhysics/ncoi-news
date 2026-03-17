@@ -23,7 +23,7 @@ export default function EnglishHome() {
   const fetchArticles = async () => { const { data } = await supabase.from('articles').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(5); if (data) setArticles(data); };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-black font-sans">
+    <div className="min-h-screen bg-gray-100 text-black font-sans flex flex-col">
       <header className="bg-blue-900 text-white p-6 shadow-md flex justify-between items-center relative z-50">
         <div>
           <h1 className="text-4xl font-bold tracking-widest uppercase"><a href="/en">NCOI News</a></h1>
@@ -31,8 +31,8 @@ export default function EnglishHome() {
         </div>
         
         <div className="flex items-center gap-4">
-          {/* LANGUAGE SWITCHER */}
-          <a href="/fa" className="text-sm font-bold bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded border border-blue-600 transition">🇮🇷 FA</a>
+          {/* CLEAN LANGUAGE SWITCHER (No Flags) */}
+          <a href="/fa" className="text-sm font-bold bg-blue-800 hover:bg-blue-700 px-3 py-1 rounded border border-blue-600 transition">FA</a>
           
           {user && profile ? (
             <div className="relative group cursor-pointer pb-2 pt-2">
@@ -51,7 +51,7 @@ export default function EnglishHome() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto mt-6 p-4 grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+      <main className="max-w-7xl mx-auto mt-6 p-4 grid grid-cols-1 md:grid-cols-4 gap-6 items-start flex-grow">
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-6 self-start">
           <h2 className="text-xl font-bold border-b-4 border-red-600 pb-2 mb-4 text-red-600 uppercase flex items-center gap-2"><span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> Live News</h2>
           <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
@@ -69,7 +69,7 @@ export default function EnglishHome() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4">Live Broadcast</h2>
           <div className="aspect-video w-full mb-6 rounded bg-black overflow-hidden shadow-xl border border-slate-300">
-            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/wk0uvX60fxg?autoplay=1&mute=1" frameBorder="0" allowFullScreen></iframe>
+            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1" frameBorder="0" allowFullScreen></iframe>
           </div>
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4 mt-8">Latest Reports</h2>
           <div className="space-y-6">
@@ -92,6 +92,21 @@ export default function EnglishHome() {
           </div>
         </div>
       </main>
+
+      {/* RESTORED ENGLISH FOOTER */}
+      <footer className="bg-slate-900 text-white mt-12 py-8 text-center border-t-4 border-blue-600">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-2xl font-bold tracking-widest uppercase mb-2">NCOI News</h2>
+          <p className="text-sm text-gray-400 mb-6">Advocating for Democracy, Human Rights, and Regime Change.</p>
+          <div className="flex justify-center gap-6 text-sm text-gray-300 font-bold mb-6">
+            <a href="/about" className="hover:text-white transition">About Us</a>
+            <a href="/contact" className="hover:text-white transition">Contact</a>
+            <a href="/privacy" className="hover:text-white transition">Privacy Policy</a>
+            <a href="/terms" className="hover:text-white transition">Terms of Service</a>
+          </div>
+          <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} National Cooperation Ottawa Iran. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }
