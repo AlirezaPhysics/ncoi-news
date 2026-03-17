@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import dynamic from 'next/dynamic';
 
 // This 'as any' completely silences the TypeScript errors for the video player
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false }) as any;
 
 export default function Home() {
   const [breakingNews, setBreakingNews] = useState<any[]>([]);
@@ -13,10 +11,8 @@ export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true); // Tells the page it is safe to load the video
     fetchBreakingNews();
     fetchArticles();
     checkUser();
@@ -100,16 +96,15 @@ export default function Home() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4">Live Broadcast</h2>
           <div className="aspect-video w-full mb-6 rounded bg-black overflow-hidden shadow-xl border border-slate-300">
-            {isMounted && (
-              <ReactPlayer
-                url="https://www.youtube.com/watch?v=xwG5U8CV3Fk" 
-                playing={true}
-                controls={true}
-                muted={true}
-                width="100%"
-                height="100%"
-              />
-            )}
+            <iframe 
+              width="100%" 
+              height="100%" 
+              src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=1" 
+              title="YouTube video player" 
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowFullScreen>
+            </iframe>
           </div>
           
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4 mt-8">Latest Reports</h2>
