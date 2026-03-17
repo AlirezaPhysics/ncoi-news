@@ -100,7 +100,7 @@ export default function Home() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4">Live Broadcast</h2>
           <div className="aspect-video w-full mb-6 rounded bg-black">
-            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/live_stream?channel=UC4R8DWoMoI7CAwX8_LjQHig" title="Live" frameBorder="0" allowFullScreen></iframe>
+            <iframe width="100%" height="100%" src="https://www.youtube.com/@NationalCooperationOttawa" title="Live" frameBorder="0" allowFullScreen></iframe>
           </div>
           
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4 mt-8">Latest Reports</h2>
@@ -123,7 +123,7 @@ export default function Home() {
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <h2 className="text-xl font-bold border-b-4 border-blue-400 pb-2 mb-4 text-blue-600 uppercase">Telegram Live</h2>
           <div className="h-[600px] w-full rounded bg-gray-50">
-            <iframe src="https://t.me/s/iranintl?embed=1" width="100%" height="100%" frameBorder="0"></iframe>
+            <iframe src="https://t.me/s/NCOI_Updates?embed=1" width="100%" height="100%" frameBorder="0"></iframe>
           </div>
         </div>
       </main>
