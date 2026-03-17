@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 export default function Dashboard() {
   const [role, setRole] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string | null>('');
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   
   const [breakingText, setBreakingText] = useState('');
@@ -20,88 +21,84 @@ export default function Dashboard() {
   const [upgradingNewsId, setUpgradingNewsId] = useState<number | null>(null);
   const [editingArticleId, setEditingArticleId] = useState<number | null>(null);
   const [articlesList, setArticlesList] = useState<any[]>([]);
-  
-  // NEW: Staff Management State
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
 
-  useEffect(() => { 
-    checkUser(); fetchNewsList(); fetchArticlesList();
-  }, []);
+  useEffect(() => { checkUser(); fetchNewsList(); fetchArticlesList(); }, []);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { window.location.href = '/login'; return; }
+    
+    setUserId(user.id);
     const { data: profile } = await supabase.from('profiles').select('role, full_name, email').eq('id', user.id).single();
     setRole(profile?.role); setFullName(profile?.full_name || user.email);
-    
-    // If the user is an Admin, fetch the pending volunteers!
     if (profile?.role === 'admin') fetchPendingUsers();
-    
     setLoading(false);
   };
 
   const fetchNewsList = async () => { const { data } = await supabase.from('breaking_news').select('*').order('created_at', { ascending: false }); if (data) setNewsList(data); };
   const fetchArticlesList = async () => { const { data } = await supabase.from('articles').select('*').order('created_at', { ascending: false }); if (data) setArticlesList(data); };
-  
-  // NEW: Fetch Pending Users
-  const fetchPendingUsers = async () => {
-    const { data } = await supabase.from('profiles').select('*').eq('role', 'pending');
-    if (data) setPendingUsers(data);
+  const fetchPendingUsers = async () => { const { data } = await supabase.from('profiles').select('*').eq('role', 'pending'); if (data) setPendingUsers(data); };
+
+  // --- SECURITY CHECK FUNCTION ---
+  // Returns true if the user is Admin, OR if they are the author AND it's under 24 hours old
+  const canEditOrDelete = (itemAuthorId: string, createdAt: string) => {
+    if (role === 'admin') return true;
+    if (role === 'writer' && itemAuthorId === userId) {
+      const hoursOld = Math.abs(new Date().getTime() - new Date(createdAt).getTime()) / 36e5;
+      return hoursOld <= 24; // Only true if less than or equal to 24 hours
+    }
+    return false;
   };
 
-  // NEW: Approve or Reject Staff
-  const handleUpdateRole = async (userId: string, newRole: string) => {
-    if (!window.confirm(`Are you sure you want to make this user a ${newRole}?`)) return;
-    await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
-    fetchPendingUsers(); // Refresh the list
-    alert(`User successfully updated to ${newRole}!`);
+  const handleUpdateRole = async (targetUserId: string, newRole: string) => {
+    if (!window.confirm(`Are you sure?`)) return;
+    await supabase.from('profiles').update({ role: newRole }).eq('id', targetUserId);
+    fetchPendingUsers(); alert(`User updated!`);
   };
 
   const handlePostBreakingNews = async (e: React.FormEvent) => {
-    e.preventDefault(); setIsPublishingNews(true); const { data: { user } } = await supabase.auth.getUser();
+    e.preventDefault(); setIsPublishingNews(true);
     let imageUrl = null;
-    if (breakingImage && user) {
+    if (breakingImage) {
       const fileName = `${Math.random()}.${breakingImage.name.split('.').pop()}`;
       await supabase.storage.from('news-media').upload(`breaking-news/${fileName}`, breakingImage);
       imageUrl = supabase.storage.from('news-media').getPublicUrl(`breaking-news/${fileName}`).data.publicUrl;
     }
-    if (user) {
-      await supabase.from('breaking_news').insert([{ text_content: breakingText, author_id: user.id, image_url: imageUrl }]);
-      setBreakingText(''); setBreakingImage(null); fetchNewsList();
-    }
-    setIsPublishingNews(false);
+    await supabase.from('breaking_news').insert([{ text_content: breakingText, author_id: userId, image_url: imageUrl }]);
+    setBreakingText(''); setBreakingImage(null); fetchNewsList(); setIsPublishingNews(false);
   };
 
   const submitArticle = async (status: string) => {
     if (!articleTitle || !articleContent) return alert("Headline and Content required!");
     if (!articleImage && !editingArticleId) return alert("Main Picture is MANDATORY!");
-    setIsPublishingArticle(true); const { data: { user } } = await supabase.auth.getUser();
+    setIsPublishingArticle(true);
     
     let imageUrl = null;
-    if (articleImage && user) {
+    if (articleImage) {
       const fileName = `${Math.random()}.${articleImage.name.split('.').pop()}`;
       await supabase.storage.from('news-media').upload(`articles/${fileName}`, articleImage);
       imageUrl = supabase.storage.from('news-media').getPublicUrl(`articles/${fileName}`).data.publicUrl;
     }
-    if (user) {
-      let newArticleId = editingArticleId;
-      if (editingArticleId) {
-        const updateData: any = { title: articleTitle, content: articleContent, status: status, updated_at: new Date() };
-        if (imageUrl) updateData.main_image_url = imageUrl;
-        await supabase.from('articles').update(updateData).eq('id', editingArticleId);
-      } else {
-        const { data: newArticle } = await supabase.from('articles').insert([{ title: articleTitle, content: articleContent, main_image_url: imageUrl, author_id: user.id, status: status }]).select().single();
-        if (newArticle) newArticleId = newArticle.id;
-      }
-      if (newArticleId && upgradingNewsId) await supabase.from('breaking_news').update({ linked_article_id: newArticleId }).eq('id', upgradingNewsId);
-      alert(`Article saved as ${status.toUpperCase()}!`);
-      setArticleTitle(''); setArticleContent(''); setArticleImage(null); setUpgradingNewsId(null); setEditingArticleId(null); fetchNewsList(); fetchArticlesList();
+    
+    let newArticleId = editingArticleId;
+    if (editingArticleId) {
+      const updateData: any = { title: articleTitle, content: articleContent, status: status, updated_at: new Date() };
+      if (imageUrl) updateData.main_image_url = imageUrl;
+      await supabase.from('articles').update(updateData).eq('id', editingArticleId);
+    } else {
+      const { data: newArticle } = await supabase.from('articles').insert([{ title: articleTitle, content: articleContent, main_image_url: imageUrl, author_id: userId, status: status }]).select().single();
+      if (newArticle) newArticleId = newArticle.id;
     }
+    if (newArticleId && upgradingNewsId) await supabase.from('breaking_news').update({ linked_article_id: newArticleId }).eq('id', upgradingNewsId);
+    
+    alert(`Article saved as ${status.toUpperCase()}!`);
+    setArticleTitle(''); setArticleContent(''); setArticleImage(null); setUpgradingNewsId(null); setEditingArticleId(null); fetchNewsList(); fetchArticlesList();
     setIsPublishingArticle(false);
   };
 
-  const handleDeleteNews = async (id: number) => { if (!window.confirm("Delete this?")) return; await supabase.from('breaking_news').delete().eq('id', id); fetchNewsList(); };
-  const handleDeleteArticle = async (id: number) => { if (!window.confirm("Delete this?")) return; await supabase.from('articles').delete().eq('id', id); fetchArticlesList(); };
+  const handleDeleteNews = async (id: number) => { if (window.confirm("Delete this?")) { await supabase.from('breaking_news').delete().eq('id', id); fetchNewsList(); }};
+  const handleDeleteArticle = async (id: number) => { if (window.confirm("Delete this?")) { await supabase.from('articles').delete().eq('id', id); fetchArticlesList(); }};
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
 
@@ -131,25 +128,22 @@ export default function Dashboard() {
               </div>
               <div className="flex gap-4 pt-2">
                 <button disabled={isPublishingArticle} type="button" onClick={() => submitArticle('draft')} className="flex-1 bg-yellow-500 text-white font-bold py-3 px-4 rounded hover:bg-yellow-600 uppercase text-sm">Save Draft</button>
-                <button disabled={isPublishingArticle} type="button" onClick={() => submitArticle('published')} className="flex-1 bg-blue-900 text-white font-bold py-3 px-4 rounded hover:bg-blue-800 uppercase text-sm">{isPublishingArticle ? 'Saving...' : 'Publish Live'}</button>
+                <button disabled={isPublishingArticle} type="button" onClick={() => submitArticle('published')} className="flex-1 bg-blue-900 text-white font-bold py-3 px-4 rounded hover:bg-blue-800 uppercase text-sm">Publish Live</button>
               </div>
               {(upgradingNewsId || editingArticleId) && <button type="button" onClick={() => {setArticleTitle(''); setArticleContent(''); setArticleImage(null); setUpgradingNewsId(null); setEditingArticleId(null);}} className="w-full mt-2 bg-gray-300 text-black font-bold py-2 rounded hover:bg-gray-400 uppercase text-sm">Cancel Editing</button>}
             </div>
           </div>
 
-          {/* NEW: ADMIN ONLY STAFF MANAGEMENT PANEL */}
           {role === 'admin' && (
             <div className="bg-white p-6 rounded-lg shadow-sm border border-purple-900">
               <h2 className="text-xl font-bold text-purple-900 mb-4 uppercase flex items-center gap-2">👑 Staff Approvals</h2>
-              {pendingUsers.length === 0 ? (
-                <p className="text-sm text-gray-500">No pending volunteer requests right now.</p>
-              ) : (
+              {pendingUsers.length === 0 ? <p className="text-sm text-gray-500">No pending volunteer requests right now.</p> : (
                 <div className="space-y-3">
                   {pendingUsers.map(user => (
                     <div key={user.id} className="p-3 border border-purple-100 bg-purple-50 rounded flex justify-between items-center">
                       <span className="font-bold text-sm text-purple-900">{user.email}</span>
                       <div className="flex gap-2">
-                        <button onClick={() => handleUpdateRole(user.id, 'writer')} className="bg-green-600 text-white font-bold text-xs px-3 py-1 rounded hover:bg-green-700 uppercase">Approve Writer</button>
+                        <button onClick={() => handleUpdateRole(user.id, 'writer')} className="bg-green-600 text-white font-bold text-xs px-3 py-1 rounded hover:bg-green-700 uppercase">Approve</button>
                         <button onClick={() => handleUpdateRole(user.id, 'rejected')} className="bg-red-600 text-white font-bold text-xs px-3 py-1 rounded hover:bg-red-700 uppercase">Reject</button>
                       </div>
                     </div>
@@ -182,8 +176,15 @@ export default function Dashboard() {
                     <span className="font-bold text-sm text-blue-900 truncate w-32">{art.title}</span>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => {setEditingArticleId(art.id); setArticleTitle(art.title); setArticleContent(art.content); window.scrollTo({ top: 0, behavior: 'smooth' });}} className="bg-blue-100 text-blue-800 font-bold text-xs px-3 py-1 rounded hover:bg-blue-200 uppercase">Edit</button>
-                    {role === 'admin' && <button onClick={() => handleDeleteArticle(art.id)} className="text-red-500 hover:text-red-700 font-bold text-xs">Delete</button>}
+                    {/* SECURITY CHECK BEFORE SHOWING BUTTONS */}
+                    {canEditOrDelete(art.author_id, art.created_at) ? (
+                      <>
+                        <button onClick={() => {setEditingArticleId(art.id); setArticleTitle(art.title); setArticleContent(art.content); window.scrollTo({ top: 0, behavior: 'smooth' });}} className="bg-blue-100 text-blue-800 font-bold text-xs px-3 py-1 rounded hover:bg-blue-200 uppercase">Edit</button>
+                        <button onClick={() => handleDeleteArticle(art.id)} className="text-red-500 hover:text-red-700 font-bold text-xs">Delete</button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">Locked</span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -197,10 +198,16 @@ export default function Dashboard() {
                 <div key={news.id} className="p-3 border border-gray-100 bg-gray-50 rounded">
                   <div className="font-medium text-sm mb-3">{news.text_content}</div>
                   <div className="flex gap-2">
-                    {!news.linked_article_id ? (
-                      <button onClick={() => { setUpgradingNewsId(news.id); setArticleTitle(news.text_content); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-green-600 text-white font-bold text-xs px-3 py-1 rounded hover:bg-green-700 uppercase">⭐ Write Article</button>
-                    ) : <span className="bg-blue-100 text-blue-800 font-bold text-xs px-3 py-1 rounded border border-blue-200">✓ Linked</span>}
-                    {role === 'admin' && <button onClick={() => handleDeleteNews(news.id)} className="text-red-500 hover:text-red-700 font-bold text-xs">Delete</button>}
+                    {canEditOrDelete(news.author_id, news.created_at) ? (
+                      <>
+                        {!news.linked_article_id ? (
+                          <button onClick={() => { setUpgradingNewsId(news.id); setArticleTitle(news.text_content); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-green-600 text-white font-bold text-xs px-3 py-1 rounded hover:bg-green-700 uppercase">⭐ Write Article</button>
+                        ) : <span className="bg-blue-100 text-blue-800 font-bold text-xs px-3 py-1 rounded border border-blue-200">✓ Linked</span>}
+                        <button onClick={() => handleDeleteNews(news.id)} className="text-red-500 hover:text-red-700 font-bold text-xs ml-2">Delete</button>
+                      </>
+                    ) : (
+                       <span className="text-xs text-gray-400 italic">Locked (Over 24h old)</span>
+                    )}
                   </div>
                 </div>
               ))}

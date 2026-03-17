@@ -127,6 +127,20 @@ export default function Home() {
           </div>
         </div>
       </main>
-    </div>
+    {/* PROFESSIONAL FOOTER */}
+      <footer className="bg-slate-900 text-white mt-12 py-8 text-center border-t-4 border-blue-600">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-2xl font-bold tracking-widest uppercase mb-2">NCOI News</h2>
+          <p className="text-sm text-gray-400 mb-6">Advocating for Democracy, Human Rights, and Regime Change.</p>
+          <div className="flex justify-center gap-6 text-sm text-gray-300 font-bold mb-6">
+            <a href="#" className="hover:text-white transition">About Us</a>
+            <a href="#" className="hover:text-white transition">Contact</a>
+            <a href="#" className="hover:text-white transition">Privacy Policy</a>
+            <a href="#" className="hover:text-white transition">Terms of Service</a>
+          </div>
+          <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} National Cooperation Ottawa Iran. All rights reserved.</p>
+        </div>
+      </footer>
+      </div>
   );
 }
