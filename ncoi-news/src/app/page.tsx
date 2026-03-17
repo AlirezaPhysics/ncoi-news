@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+// Import the player (lazy loading saves bundle size)
+import ReactPlayer from 'react-player/lazy';
 
 export default function Home() {
-  // News & Articles State
   const [breakingNews, setBreakingNews] = useState<any[]>([]);
   const [articles, setArticles] = useState<any[]>([]);
-  
-  // User State
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
 
@@ -33,7 +32,6 @@ export default function Home() {
   };
 
   const fetchArticles = async () => {
-    // We will fetch real articles here soon!
     const { data } = await supabase.from('articles').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(5);
     if (data) setArticles(data);
   };
@@ -48,7 +46,6 @@ export default function Home() {
           <p className="text-sm mt-1 text-blue-200">National Cooperation Ottawa Iran</p>
         </div>
         
-        {/* IF LOGGED IN: Show Profile Menu | IF LOGGED OUT: Show Staff Portal Button */}
         {user && profile ? (
           <div className="relative group cursor-pointer pb-2 pt-2">
             <div className="flex items-center gap-3">
@@ -69,14 +66,14 @@ export default function Home() {
         )}
       </header>
 
-      <main className="max-w-7xl mx-auto mt-6 p-4 grid grid-cols-1 md:grid-cols-4 gap-6">
+      <main className="max-w-7xl mx-auto mt-6 p-4 grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
         
-        {/* LEFT SIDEBAR: Real Breaking News */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        {/* LEFT SIDEBAR: Sticky Live News */}
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-6 self-start">
           <h2 className="text-xl font-bold border-b-4 border-red-600 pb-2 mb-4 text-red-600 uppercase flex items-center gap-2">
             <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> Live News
           </h2>
-          <div className="space-y-6">
+          <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
             {breakingNews.map((news) => (
               <div key={news.id} className="text-sm border-l-2 border-red-200 pl-2">
                 <strong className="text-red-600">
@@ -84,13 +81,6 @@ export default function Home() {
                 </strong>
                 <p className="mt-1 text-gray-800 font-medium">{news.text_content}</p>
                 {news.image_url && <img src={news.image_url} alt="News" className="mt-2 rounded shadow-sm w-full object-cover max-h-32" />}
-                
-                {/* IF THIS NEWS HAS A FULL ARTICLE LINKED, SHOW A READ MORE BUTTON */}
-                {news.linked_article_id && (
-                  <a href={`/article/${news.linked_article_id}`} className="inline-block mt-2 text-blue-600 font-bold text-xs hover:underline">
-                    Read Full Article &rarr;
-                  </a>
-                )}
               </div>
             ))}
           </div>
@@ -99,8 +89,20 @@ export default function Home() {
         {/* MIDDLE: Featured Articles & Live Video */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4">Live Broadcast</h2>
-          <div className="aspect-video w-full mb-6 rounded bg-black">
-            <iframe width="100%" height="100%" src="https://iranopasmigirim.com/fa/iran-national-revolution-tv" title="Iran National TV" frameBorder="0" allowFullScreen></iframe>
+          <div className="aspect-video w-full mb-6 rounded bg-black overflow-hidden shadow-xl border border-slate-300">
+            <ReactPlayer
+              url="https://hls.irannrtv.live/hls/stream.m3u8"
+              playing={true}
+              controls={true}
+              muted={true}
+              width="100%"
+              height="100%"
+              config={{
+                file: {
+                  forceHLS: true,
+                },
+              }}
+            />
           </div>
           
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4 mt-8">Latest Reports</h2>
@@ -119,28 +121,23 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDEBAR: Telegram Feed */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        {/* RIGHT SIDEBAR: Sticky Telegram Feed */}
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-6 self-start">
           <h2 className="text-xl font-bold border-b-4 border-blue-400 pb-2 mb-4 text-blue-600 uppercase">Telegram Live</h2>
-          <div className="h-[600px] w-full rounded bg-gray-50">
+          <div className="h-[600px] w-full rounded bg-gray-50 overflow-hidden">
             <iframe src="https://t.me/s/NCOI_Updates?embed=1" width="100%" height="100%" frameBorder="0"></iframe>
           </div>
         </div>
       </main>
-    {/* PROFESSIONAL FOOTER */}
+
+      {/* PROFESSIONAL FOOTER */}
       <footer className="bg-slate-900 text-white mt-12 py-8 text-center border-t-4 border-blue-600">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-2xl font-bold tracking-widest uppercase mb-2">NCOI News</h2>
           <p className="text-sm text-gray-400 mb-6">Advocating for Democracy, Human Rights, and Regime Change.</p>
-          <div className="flex justify-center gap-6 text-sm text-gray-300 font-bold mb-6">
-            <a href="/about" className="hover:text-white transition">About Us</a>
-            <a href="/contact" className="hover:text-white transition">Contact</a>
-            <a href="/privacy" className="hover:text-white transition">Privacy Policy</a>
-            <a href="/terms" className="hover:text-white transition">Terms of Service</a>
-          </div>
           <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} National Cooperation Ottawa Iran. All rights reserved.</p>
         </div>
       </footer>
-      </div>
+    </div>
   );
 }
