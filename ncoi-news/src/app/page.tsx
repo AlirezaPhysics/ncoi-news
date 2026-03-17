@@ -102,7 +102,7 @@ export default function Home() {
           <div className="aspect-video w-full mb-6 rounded bg-black overflow-hidden shadow-xl border border-slate-300">
             {isMounted && (
               <ReactPlayer
-                url="https://www.youtube.com/watch?v=jfKfPfyJRdk" 
+                url="https://www.youtube.com/watch?v=xwG5U8CV3Fk" 
                 playing={true}
                 controls={true}
                 muted={true}
