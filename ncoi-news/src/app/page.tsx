@@ -2,20 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-// Import the player 
-import ReactPlayer from 'react-player/lazy';
+// The bulletproof Next.js way to load a video player
+import dynamic from 'next/dynamic';
+
+const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 
 export default function Home() {
   const [breakingNews, setBreakingNews] = useState<any[]>([]);
   const [articles, setArticles] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  
-  // PRO TRICK: This stops the video player from crashing Next.js
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
     fetchBreakingNews();
     fetchArticles();
     checkUser();
@@ -72,7 +70,7 @@ export default function Home() {
 
       <main className="max-w-7xl mx-auto mt-6 p-4 grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
         
-        {/* LEFT SIDEBAR: Sticky Live News */}
+        {/* LEFT SIDEBAR */}
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-6 self-start">
           <h2 className="text-xl font-bold border-b-4 border-red-600 pb-2 mb-4 text-red-600 uppercase flex items-center gap-2">
             <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> Live News
@@ -95,22 +93,19 @@ export default function Home() {
           </div>
         </div>
 
-        {/* MIDDLE: Featured Articles & Live Video */}
+        {/* MIDDLE COLUMN */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4">Live Broadcast</h2>
           <div className="aspect-video w-full mb-6 rounded bg-black overflow-hidden shadow-xl border border-slate-300">
-            {/* ONLY RENDER THE PLAYER AFTER THE PAGE LOADS */}
-            {isMounted && (
-              <ReactPlayer
-                url="https://hls.irannrtv.live/hls/stream.m3u8"
-                playing={true}
-                controls={true}
-                muted={true}
-                width="100%"
-                height="100%"
-                config={{ file: { forceHLS: true } }}
-              />
-            )}
+            <ReactPlayer
+              url="https://hls.irannrtv.live/hls/stream.m3u8"
+              playing={true}
+              controls={true}
+              muted={true}
+              width="100%"
+              height="100%"
+              config={{ file: { forceHLS: true } }}
+            />
           </div>
           
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4 mt-8">Latest Reports</h2>
@@ -129,7 +124,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDEBAR: Sticky Telegram Feed */}
+        {/* RIGHT SIDEBAR */}
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-6 self-start">
           <h2 className="text-xl font-bold border-b-4 border-blue-400 pb-2 mb-4 text-blue-600 uppercase">Telegram Live</h2>
           <div className="h-[600px] w-full rounded bg-gray-50 overflow-hidden">
@@ -138,7 +133,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* PROFESSIONAL FOOTER */}
+      {/* FOOTER */}
       <footer className="bg-slate-900 text-white mt-12 py-8 text-center border-t-4 border-blue-600">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-2xl font-bold tracking-widest uppercase mb-2">NCOI News</h2>
