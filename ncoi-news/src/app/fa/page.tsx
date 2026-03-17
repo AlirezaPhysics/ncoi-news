@@ -23,7 +23,11 @@ export default function PersianHome() {
   const fetchArticles = async () => { const { data } = await supabase.from('articles').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(5); if (data) setArticles(data); };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-black font-sans flex flex-col" dir="rtl">
+    <div 
+      className="min-h-screen text-black font-sans flex flex-col bg-fixed bg-cover bg-center"
+      dir="rtl"
+      style={{ backgroundImage: "linear-gradient(rgba(243, 244, 246, 0.85), rgba(243, 244, 246, 0.85)), url('/bg.png')" }}
+    >
       <header className="bg-blue-900 text-white p-6 shadow-md flex justify-between items-center relative z-50">
         
         {/* NEW LOGO + TEXT COMBO (PERSIAN) */}
