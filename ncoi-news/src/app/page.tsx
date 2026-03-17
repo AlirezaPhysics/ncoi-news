@@ -101,13 +101,17 @@ export default function Home() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 md:col-span-2">
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4">Live Broadcast</h2>
           <div className="aspect-video w-full mb-6 rounded bg-black overflow-hidden shadow-xl border border-slate-300">
-            <iframe
-              src="https://iranopasmigirim.com/fa/iran-national-revolution-tv"
-                className="w-full h-full"
-                allow="autoplay; encrypted-media; fullscreen"
-                allowFullScreen
-                style={{ border: 'none' }}
+            {isMounted && (
+              <ReactPlayer
+                url="https://hls.irannrtv.live/hls/stream.m3u8"
+                playing={true}
+                controls={true}
+                muted={true}
+                width="100%"
+                height="100%"
+                config={{ file: { forceHLS: true } }}
               />
+            )}
           </div>
           
           <h2 className="text-2xl font-bold border-b-2 border-blue-900 pb-2 mb-4 mt-8">Latest Reports</h2>
