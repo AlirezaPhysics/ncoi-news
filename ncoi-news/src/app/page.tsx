@@ -134,8 +134,22 @@ export default function Home() {
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-6 self-start">
           <h2 className="text-xl font-bold border-b-4 border-blue-400 pb-2 mb-4 text-blue-600 uppercase">Telegram Live</h2>
           <div className="h-[600px] w-full rounded bg-gray-50 overflow-hidden">
-            <iframe src="https://t.me/s/NCOI_Updates?embed=1" width="100%" height="100%" frameBorder="0"></iframe>
+{/* RIGHT SIDEBAR: Secure Telegram Link */}
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-6 self-start">
+          <h2 className="text-xl font-bold border-b-4 border-blue-400 pb-2 mb-4 text-blue-600 uppercase">Telegram Community</h2>
+          <div className="bg-blue-50 border border-blue-200 p-6 rounded text-center">
+            <h3 className="text-lg font-bold text-blue-900 mb-2">Secure Discussions</h3>
+            <p className="text-sm text-gray-700 mb-6">Join our private Telegram group for real-time community discussions, raw updates, and secure coordination.</p>
+            <a 
+              href="https://t.me/+L3g_GKwnpytiYjIx" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="block w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 uppercase tracking-wide shadow-md transition"
+            >
+              Join Private Channel
+            </a>
           </div>
+        </div>          </div>
         </div>
       </main>
 
